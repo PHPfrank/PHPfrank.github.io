@@ -63,6 +63,8 @@
 	        
 				<li><a href="/tags/随笔/">随笔</a></li>
 	        
+				<li><a href="/tags/技术/">技术</a></li>
+	        
 			</ul>
 		</nav>
 		<nav class="header-smart-menu">
@@ -86,8 +88,6 @@
 					<a class="github" target="_blank" href="#" title="github"><i class="icon-github"></i></a>
 		        
 					<a class="weibo" target="_blank" href="#" title="weibo"><i class="icon-weibo"></i></a>
-		        
-					<a class="rss" target="_blank" href="#" title="rss"><i class="icon-rss"></i></a>
 		        
 					<a class="zhihu" target="_blank" href="#" title="zhihu"><i class="icon-zhihu"></i></a>
 		        
@@ -121,6 +121,8 @@
 			
 				
 			
+				
+			
 			
 			
 			<nav class="header-nav">
@@ -130,20 +132,20 @@
 			        
 						<a class="weibo" target="_blank" href="#" title="weibo"><i class="icon-weibo"></i></a>
 			        
-						<a class="rss" target="_blank" href="#" title="rss"><i class="icon-rss"></i></a>
-			        
 						<a class="zhihu" target="_blank" href="#" title="zhihu"><i class="icon-zhihu"></i></a>
 			        
 				</div>
 			</nav>
 
 			<nav class="header-menu js-header-menu">
-				<ul style="width: 50%">
+				<ul style="width: 70%">
 				
 				
-					<li style="width: 50%"><a href="/">主页</a></li>
+					<li style="width: 33.333333333333336%"><a href="/">主页</a></li>
 		        
-					<li style="width: 50%"><a href="/tags/随笔/">随笔</a></li>
+					<li style="width: 33.333333333333336%"><a href="/tags/随笔/">随笔</a></li>
+		        
+					<li style="width: 33.333333333333336%"><a href="/tags/技术/">技术</a></li>
 		        
 				</ul>
 			</nav>
@@ -160,6 +162,94 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-cgi" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2016/11/10/cgi/">cgi，fastcgi，php-fpm的一些个人理解</a>
+    </h1>
+  
+
+        
+        <a href="/2016/11/10/cgi/" class="archive-article-date">
+  	<time datetime="2016-11-10T01:59:27.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2016-11-10</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>先来了解几个基本的概念：</p>
+<p>cgi全称是“公共网关接口”(Common Gateway Interface)，HTTP服务器与你的或其它机器上的程序进行“交谈”的一种工具，其程序须运行在网络服务器上。当web server（nginx）收到/index.php这个请求后，会启动对应的CGI程序，这里就是PHP的解析器。接下来PHP解析器会解析php.ini文件，初始化执行环境（消耗大量时间，对每个请求都要执行，fastcgi就是对这个过程的优化），然后处理请求，再以CGI规定的格式返回处理后的结果，退出进程。web server再把结果返回给浏览器。</p>
+        
+          <a class="article-more-a" href="/2016/11/10/cgi/#more">more >></a>
+        
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">技术</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+	<div class="article-category tagcloud">
+		<i class="icon-book icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="/categories/php//" class="article-tag-list-link color4">php</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2016/11/10/cgi/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-sth-to-say" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -167,13 +257,13 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2018/09/04/sth-to-say/">过好一个人的生活</a>
+      <a class="article-title" href="/2016/09/04/sth-to-say/">过好一个人的生活</a>
     </h1>
   
 
         
-        <a href="/2018/09/04/sth-to-say/" class="archive-article-date">
-  	<time datetime="2018-09-04T09:34:33.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-09-04</time>
+        <a href="/2016/09/04/sth-to-say/" class="archive-article-date">
+  	<time datetime="2016-09-04T09:34:33.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2016-09-04</time>
 </a>
         
       </header>
@@ -185,7 +275,7 @@
 <p><img src="https://wl2x7ve3z6yq9r6s.oss-cn-hangzhou.aliyuncs.com/2018-09-04/372be37ff4985554d5f694f4fd5a827a.jpg" alt="blockchain"></p>
 <h3 id="1"><a href="#1" class="headerlink" title="1"></a>1</h3><p>一个人的时光，是自我增值的很好机会。这个时候，你应该把焦点放在你能够持续增值的地方，而不是负面情绪上的抱怨。</p>
         
-          <a class="article-more-a" href="/2018/09/04/sth-to-say/#more">more >></a>
+          <a class="article-more-a" href="/2016/09/04/sth-to-say/#more">more >></a>
         
       
 
@@ -220,7 +310,7 @@
 
       
         <p class="article-more-link">
-          <a class="article-more-a" href="/2018/09/04/sth-to-say/">展开全文 >></a>
+          <a class="article-more-a" href="/2016/09/04/sth-to-say/">展开全文 >></a>
         </p>
       
 
@@ -257,13 +347,13 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2016/09/04/my-first-blog/">高性能mysql</a>
+      <a class="article-title" href="/2016/04/21/my-first-blog/">高性能mysql</a>
     </h1>
   
 
         
-        <a href="/2016/09/04/my-first-blog/" class="archive-article-date">
-  	<time datetime="2016-09-04T06:44:15.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2016-09-04</time>
+        <a href="/2016/04/21/my-first-blog/" class="archive-article-date">
+  	<time datetime="2016-04-21T06:44:15.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2016-04-21</time>
 </a>
         
       </header>
@@ -275,7 +365,7 @@ u=702257389,1274025419&amp;fm=27&amp;gp=0.jpg" alt="blockchain"></p>
 <p>where子句（条件查询）：按照“条件表达式”指定的条件进行查询。</p>
 <p>group by子句（分组）：按照“属性名”指定的字段进行分组。group by子句通常和count()、sum()等聚合函数一起使用。</p>
         
-          <a class="article-more-a" href="/2016/09/04/my-first-blog/#more">more >></a>
+          <a class="article-more-a" href="/2016/04/21/my-first-blog/#more">more >></a>
         
       
 
@@ -284,6 +374,17 @@ u=702257389,1274025419&amp;fm=27&amp;gp=0.jpg" alt="blockchain"></p>
     <div class="article-info article-info-index">
       
       
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">技术</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
       
 	<div class="article-category tagcloud">
 		<i class="icon-book icon"></i>
@@ -299,7 +400,7 @@ u=702257389,1274025419&amp;fm=27&amp;gp=0.jpg" alt="blockchain"></p>
 
       
         <p class="article-more-link">
-          <a class="article-more-a" href="/2016/09/04/my-first-blog/">展开全文 >></a>
+          <a class="article-more-a" href="/2016/04/21/my-first-blog/">展开全文 >></a>
         </p>
       
 
@@ -422,6 +523,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">技术</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">随笔</a>
               </li>
             
@@ -485,7 +590,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
     
     	<section class="tools-section tools-section-me" q-show="aboutme">
   	  	
-  	  		<div class="aboutme-wrap" id="js-aboutme">杭州码农&lt;br&gt;&lt;br&gt;&lt;br&gt;谢谢来访</div>
+  	  		<div class="aboutme-wrap" id="js-aboutme">杭州码农&lt;br&gt;&lt;br&gt;谢谢来访</div>
   	  	
     	</section>
     
