@@ -17,7 +17,7 @@
 <meta property="og:description" content="技术">
 <meta property="og:locale" content="default">
 <meta property="og:image" content="https://wl2x7ve3z6yq9r6s.oss-cn-hangzhou.aliyuncs.com/2018-09-14/91b20b8d2af30707cb2fcab6264a25f4.png">
-<meta property="og:updated_time" content="2018-09-14T06:07:02.088Z">
+<meta property="og:updated_time" content="2018-09-14T06:10:38.658Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="消息队列--laravel小案例">
 <meta name="twitter:description" content="技术">
@@ -189,6 +189,7 @@
 <p>主要原因是由于在高并发环境下，由于来不及同步处理，请求往往会发生堵塞，比如说，大量的insert，update之类的请求同时到达MySQL，直接导致无数的行锁表锁，甚至最后请求会堆积过多，从而触发too many connections错误。通过使用消息队列，我们可以异步处理请求，从而缓解系统的压力。</p>
 <p>目前业内使用较多的消息队列有RabbitMQ，ActiveMQ，ZeroMQ，Kafka，MetaMQ，RocketMQ</p>
 <p>总结一下消息队列的几个核心点：<br><code>1：队列实现的目的（为了异步执行，保证可以重试）</code><br><code>2：适合使用队列的任务：（耗时久的任务，需要保证成功率的任务）</code></p>
+<a id="more"></a>
 <ul>
 <li><h2 id="laravel消息队列实例："><a href="#laravel消息队列实例：" class="headerlink" title="laravel消息队列实例："></a>laravel消息队列实例：</h2></li>
 </ul>

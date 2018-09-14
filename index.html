@@ -188,96 +188,9 @@
 <p>主要原因是由于在高并发环境下，由于来不及同步处理，请求往往会发生堵塞，比如说，大量的insert，update之类的请求同时到达MySQL，直接导致无数的行锁表锁，甚至最后请求会堆积过多，从而触发too many connections错误。通过使用消息队列，我们可以异步处理请求，从而缓解系统的压力。</p>
 <p>目前业内使用较多的消息队列有RabbitMQ，ActiveMQ，ZeroMQ，Kafka，MetaMQ，RocketMQ</p>
 <p>总结一下消息队列的几个核心点：<br><code>1：队列实现的目的（为了异步执行，保证可以重试）</code><br><code>2：适合使用队列的任务：（耗时久的任务，需要保证成功率的任务）</code></p>
-<ul>
-<li><h2 id="laravel消息队列实例："><a href="#laravel消息队列实例：" class="headerlink" title="laravel消息队列实例："></a>laravel消息队列实例：</h2></li>
-</ul>
-<p>作为一个laravel框架使用者，先以laravel5.5为基础来写个小demo看一下laravel是如何来利用队列处理业务逻辑的。</p>
-<p>laravel有自身搭建的队列系统laravel_queue，队列配置文件存放在 config/queue.php</p>
-<p>首先开启一个任务类：<br>shell输入：<br>php artisan make:job OrderMessage //订单消息队列</p>
-<p>接下来打开app目录下jobs文件夹，里面就会生成一个根据artisan指令创建的OrderMessage.php文件，下面先贴代码：</p>
-<pre><code>&lt;?php
-
-namespace App\Jobs;
-
-use App\Models\RequestLog;
-use Illuminate\Bus\Queueable;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Bus\Dispatchable;
-
-class OrderMessage implements ShouldQueue
-{
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-
-    //队列处理参数
-    protected $app_id = &apos;&apos;;//请求url
-
-    protected $uri = &apos;v1/test&apos;;//请求url
-
-    protected $method = &apos;get&apos;;//请求url
-
-    /**
-    * Create a new job instance.
-    *
-    * @return void
-    */
-    public function __construct(array $data)
-    {
-        //参数赋值
-        $this-&gt;app_id = $data[&apos;app_id&apos;];
-
-        $this-&gt;uri = $data[&apos;uri&apos;];
-
-        $this-&gt;method = $data[&apos;method&apos;];
-    }
-
-    /**
-    * Execute the job.
-    * 队列逻辑实现方法
-    * @return void
-    */
-    public function handle()
-    {
-        //实现逻辑
-        $arr = array(
-            &apos;app_id&apos; =&gt; $this-&gt;app_id,
-            &apos;uri&apos; =&gt; $this-&gt;uri,
-            &apos;method&apos; =&gt; $this-&gt;method,
-        );
-        RequestLog::insert($arr);
-    }
-}
-</code></pre><p>在这个job中，核心就是一个让队列用来调用此任务的 handle 方法，在这个方法中，我们来出来分发到队列中的任务。在这个小demo中，实现的逻辑就是向请求日志（request_log表中批量插入数据）。</p>
-<p>handle方法写好后，我们就能通过 dispatch 辅助函数来分发它了。想要传输的数据也可以在实例化的时候进行传递。直接贴一段测试分发的方法：</p>
-<pre><code>public function test(Request $request
-{
-    //dispatch分发任务到消息队列
-    for($i = 0; $i &lt; 3; $i ++) 
-    {
-        //队列数据传递
-        $data = array(
-            &apos;app_id&apos; =&gt; $i,
-            &apos;uri&apos; =&gt; &apos;v1/test&apos;,
-            &apos;method&apos; =&gt; &apos;get&apos;,
-        );
-    dispatch(new OrderMessage($data))-&gt;delay(now-&gt;addSecond(10));
-    }
-    exit(&apos;测试队列程序结束&apos;);
-}
-</code></pre><p>demo钟delay方法代表的即是将任务放入队列之后，延迟10秒钟之后进行处理。具体的时间可以修改。</p>
-<p>前期的准备工作完毕之后，可以正式的进行队列处理了。</p>
-<p>先看一下标准的队列运行指令：php artisan queue:work –quiet –delay=3 –sleep=3 –tries=3</p>
-<p>指令中参数的含义<br>–quiet（不输出任何内容）–delay=3（一个任务失败后，多久后再重试）<br>–sleep （去 Redis 中拿任务的时候，发现没有任务，休息多长时间，单位是秒）<br>–tries    （定义失败任务最多重试次数。这个值的设定根据任务的重要程度来确定，一般 3 次比较适合。）</p>
-<p>开发环境中可以使用queue:listen来监听，转移到正式环境之后还是使用queue:work来控制。</p>
-<p>来看一下实际效果，shell执行php artisan queue:work，开启队列任务</p>
-<p>路由访问刚才demo中的test方法，将任务分发到jobs中，然后handle方法会对分配进来的任务依次进行处理。</p>
-<p><img src="https://wl2x7ve3z6yq9r6s.oss-cn-hangzhou.aliyuncs.com/2018-09-14/91b20b8d2af30707cb2fcab6264a25f4.png" alt="blockchain"></p>
-<ul>
-<li><h2 id="laravel队列中请注意以下两点："><a href="#laravel队列中请注意以下两点：" class="headerlink" title="laravel队列中请注意以下两点："></a>laravel队列中请注意以下两点：</h2></li>
-</ul>
-<p>1.调用延迟执行时需要配置.env中 QUEUE_DRIVER 不可以是sync，即不可以同步执行（修改后记得php artisan config:clear清配置缓存）<br>2.重启队列的指令为： php artisan queue:restart</p>
-
+        
+          <a class="article-more-a" href="/2018/09/14/queue/#more">more >></a>
+        
       
 
       
