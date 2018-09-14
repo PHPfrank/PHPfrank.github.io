@@ -17,7 +17,7 @@
 <meta property="og:description" content="技术">
 <meta property="og:locale" content="default">
 <meta property="og:image" content="https://wl2x7ve3z6yq9r6s.oss-cn-hangzhou.aliyuncs.com/2018-09-14/91b20b8d2af30707cb2fcab6264a25f4.png">
-<meta property="og:updated_time" content="2018-09-14T06:10:38.658Z">
+<meta property="og:updated_time" content="2018-09-14T06:11:50.056Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="消息队列--laravel小案例">
 <meta name="twitter:description" content="技术">
@@ -184,14 +184,14 @@
     <div class="article-entry" itemprop="articleBody">
       
         <ul>
-<li><h2 id="首先解释一下我们为什么会使用消息队列："><a href="#首先解释一下我们为什么会使用消息队列：" class="headerlink" title="首先解释一下我们为什么会使用消息队列："></a>首先解释一下我们为什么会使用消息队列：</h2></li>
+<li><h3 id="首先解释一下我们为什么会使用消息队列："><a href="#首先解释一下我们为什么会使用消息队列：" class="headerlink" title="首先解释一下我们为什么会使用消息队列："></a>首先解释一下我们为什么会使用消息队列：</h3></li>
 </ul>
 <p>主要原因是由于在高并发环境下，由于来不及同步处理，请求往往会发生堵塞，比如说，大量的insert，update之类的请求同时到达MySQL，直接导致无数的行锁表锁，甚至最后请求会堆积过多，从而触发too many connections错误。通过使用消息队列，我们可以异步处理请求，从而缓解系统的压力。</p>
 <p>目前业内使用较多的消息队列有RabbitMQ，ActiveMQ，ZeroMQ，Kafka，MetaMQ，RocketMQ</p>
 <p>总结一下消息队列的几个核心点：<br><code>1：队列实现的目的（为了异步执行，保证可以重试）</code><br><code>2：适合使用队列的任务：（耗时久的任务，需要保证成功率的任务）</code></p>
 <a id="more"></a>
 <ul>
-<li><h2 id="laravel消息队列实例："><a href="#laravel消息队列实例：" class="headerlink" title="laravel消息队列实例："></a>laravel消息队列实例：</h2></li>
+<li><h3 id="laravel消息队列实例："><a href="#laravel消息队列实例：" class="headerlink" title="laravel消息队列实例："></a>laravel消息队列实例：</h3></li>
 </ul>
 <p>作为一个laravel框架使用者，先以laravel5.5为基础来写个小demo看一下laravel是如何来利用队列处理业务逻辑的。</p>
 <p>laravel有自身搭建的队列系统laravel_queue，队列配置文件存放在 config/queue.php</p>
@@ -276,7 +276,7 @@ class OrderMessage implements ShouldQueue
 <p>路由访问刚才demo中的test方法，将任务分发到jobs中，然后handle方法会对分配进来的任务依次进行处理。</p>
 <p><img src="https://wl2x7ve3z6yq9r6s.oss-cn-hangzhou.aliyuncs.com/2018-09-14/91b20b8d2af30707cb2fcab6264a25f4.png" alt="blockchain"></p>
 <ul>
-<li><h2 id="laravel队列中请注意以下两点："><a href="#laravel队列中请注意以下两点：" class="headerlink" title="laravel队列中请注意以下两点："></a>laravel队列中请注意以下两点：</h2></li>
+<li><h3 id="laravel队列中请注意以下两点："><a href="#laravel队列中请注意以下两点：" class="headerlink" title="laravel队列中请注意以下两点："></a>laravel队列中请注意以下两点：</h3></li>
 </ul>
 <p>1.调用延迟执行时需要配置.env中 QUEUE_DRIVER 不可以是sync，即不可以同步执行（修改后记得php artisan config:clear清配置缓存）<br>2.重启队列的指令为： php artisan queue:restart</p>
 
