@@ -6,19 +6,22 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="//litten.me">
-  <title>Archives | frank的博客</title>
+  <title>go中http包的运行流程梳理 | frank的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="93年生人，坐标杭州。">
-<meta name="keywords" content="后端,java,php,react,node.js">
-<meta property="og:type" content="website">
-<meta property="og:title" content="frank的博客">
-<meta property="og:url" content="//litten.me/archives/index.html">
+  <meta name="description" content="技术">
+<meta name="keywords" content="技术">
+<meta property="og:type" content="article">
+<meta property="og:title" content="go中http包的运行流程梳理">
+<meta property="og:url" content="//litten.me/2018/09/18/go-http/index.html">
 <meta property="og:site_name" content="frank的博客">
-<meta property="og:description" content="93年生人，坐标杭州。">
+<meta property="og:description" content="技术">
 <meta property="og:locale" content="default">
+<meta property="og:image" content="https://wl2x7ve3z6yq9r6s.oss-cn-hangzhou.aliyuncs.com/2018-09-18/1051c931aa0bed000c861b3001dff182.png">
+<meta property="og:updated_time" content="2018-09-18T03:23:00.658Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="frank的博客">
-<meta name="twitter:description" content="93年生人，坐标杭州。">
+<meta name="twitter:title" content="go中http包的运行流程梳理">
+<meta name="twitter:description" content="技术">
+<meta name="twitter:image" content="https://wl2x7ve3z6yq9r6s.oss-cn-hangzhou.aliyuncs.com/2018-09-18/1051c931aa0bed000c861b3001dff182.png">
   
     <link rel="alternative" href="/atom.xml" title="frank的博客" type="application/atom+xml">
   
@@ -160,36 +163,102 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-go-http" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2018" class="archive-year">2018</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/09/18/go-http/" class="archive-article-date">
-  	<time datetime="2018-09-18T02:47:02.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-09-18</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2018/09/18/go-http/">go中http包的运行流程梳理</a>
+    <h1 class="article-title" itemprop="name">
+      go中http包的运行流程梳理
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2018/09/18/go-http/" class="archive-article-date">
+  	<time datetime="2018-09-18T02:47:02.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-09-18</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Go语言里面提供了一个完善的net/http包，通过http包可以很方便的就搭建起来一个可以运行的Web服务。同时使用这个包能很简单地对Web的路由，静态文件，模版，cookie等数据进行设置和操作。</p>
+<p>可能你会问我们的nginx、apache服务器不需要吗，Go就是不需要这些，因为他直接就监听tcp端口了，做了nginx做的事情。</p>
+<h3 id="http包执行流程："><a href="#http包执行流程：" class="headerlink" title="http包执行流程："></a>http包执行流程：</h3><p>先来看一张图：<br><a id="more"></a><br><img src="https://wl2x7ve3z6yq9r6s.oss-cn-hangzhou.aliyuncs.com/2018-09-18/1051c931aa0bed000c861b3001dff182.png" alt="blockchain"></p>
+<p><code>1.创建Listen Socket, 监听指定的端口, 等待客户端请求到来(通过http.ListenAndServe来绑定监听)。</code></p>
+<p><code>2.Listen Socket接受客户端的请求, 得到Client Socket, 接下来通过Client Socket与客户端通信。
+ 监听到客户端请求端口时，调用了srv.Serve(net.Listener)函数，这个函数就是处理接收客户端的请求信息。这个函数里面起了一个for{}，首先通过Listener接收请求，其次创建一个Conn，最后单独开了一个goroutine，把这个请求的数据当做参数扔给这个conn去服务：go c.serve()。这个就是高并发体现了，用户的每一次请求都是在一个新的goroutine去服务，相互不影响。</code></p>
+<p><code>3.处理客户端的请求, 首先从Client Socket读取HTTP请求的协议头,如果是POST方法, 还可能要读取客户端提交的数据,然后交给相应的handler处理请求, handler处理完毕准备好客户端需要的数据, 通过Client Socket写给客户端。</code></p>
+<p>Go的http有两个核心功能：Conn、ServeMux<br>Conn :<br>客户端的每次请求都会创建一个Conn，这个Conn里面保存了该次请求的信息，然后再传递到对应的handler<br>该handler中便可以读取到相应的header信息，这样保证了每个请求的独立性。</p>
+<p>ServeMux:<br>先看一下ServeMux的结构</p>
+<pre><code>type ServeMux struct {
+    mu sync.RWMutex   //锁，由于请求涉及到并发处理，因此这里需要一个锁机制
+    m  map[string]muxEntry  // 路由规则，一个string对应一个mux实体，这里的string就是注册的路由表达式
+    hosts bool // 是否在任意的规则中带有host信息
+}
+</code></pre><p>再看一下muxEntry的结构</p>
+<pre><code>type muxEntry struct {
+    explicit bool   // 是否精确匹配
+    h        Handler // 这个路由表达式对应哪个handler
+    pattern  string  //匹配字符串
+}
+</code></pre><p>再看一下handler的实现</p>
+<pre><code>type Handler interface {
+    ServeHTTP(ResponseWriter, *Request)  // 路由实现器
+}
+</code></pre><p>最后在代码中我们就可以通过类似 http.HandleFunc(“/“, sayHelloWorld) 的方式设置访问的路由</p>
+<h3 id="通过对http包的分析之后，现在让我们来梳理一下整个的代码执行过程。"><a href="#通过对http包的分析之后，现在让我们来梳理一下整个的代码执行过程。" class="headerlink" title="通过对http包的分析之后，现在让我们来梳理一下整个的代码执行过程。"></a>通过对http包的分析之后，现在让我们来梳理一下整个的代码执行过程。</h3><p>首先调用Http.HandleFunc</p>
+<p>按顺序做了几件事：</p>
+<p><code>1 调用了DefaultServeMux的HandleFunc</code></p>
+<p><code>2 调用了DefaultServeMux的Handle</code></p>
+<p><code>3 往DefaultServeMux的map[string]muxEntry中增加对应的handler和路由规则</code></p>
+<p>其次调用http.ListenAndServe(“:9090”, nil)</p>
+<p>按顺序做了几件事情：</p>
+<p><code>1 实例化Server</code></p>
+<p><code>2 调用Server的ListenAndServe()</code></p>
+<p><code>3 调用net.Listen(&quot;tcp&quot;, addr)监听端口</code></p>
+<p><code>4 启动一个for循环，在循环体中Accept请求</code></p>
+<p><code>5 对每个请求实例化一个Conn，并且开启一个goroutine为这个请求进行服务go c.serve()</code></p>
+<p><code>6 读取每个请求的内容w, err := c.readRequest()</code></p>
+<p><code>7 判断handler是否为空，如果没有设置handler（这个例子就没有设置handler），handler就设置为DefaultServeMux</code></p>
+<p><code>8 调用handler的ServeHttp</code></p>
+<p><code>9 在这个例子中，下面就进入到DefaultServeMux.ServeHttp</code></p>
+<p><code>10 根据request选择handler，并且进入到这个handler的ServeHTTP</code></p>
+<pre><code>mux.handler(r).ServeHTTP(w, r)
+</code></pre><p><code>11 选择handler：</code></p>
+<p><code>A 判断是否有路由能满足这个request（循环遍历ServeMux的muxEntry）</code></p>
+<p><code>B 如果有路由满足，调用这个路由handler的ServeHTTP</code></p>
+<p><code>C 如果没有路由满足，调用NotFoundHandler的ServeHTTP</code></p>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
@@ -201,7 +270,7 @@
 		</ul>
 	</div>
 
-          
+      
 	<div class="article-category tagcloud">
 		<i class="icon-book icon"></i>
 		<ul class="article-tag-list">
@@ -214,223 +283,104 @@
 	</div>
 
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/09/14/queue/" class="archive-article-date">
-  	<time datetime="2018-09-14T03:38:09.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-09-14</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2018/09/14/queue/">消息队列--laravel小案例</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">技术</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/php//" class="article-tag-list-link color4">php</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
       
-        </div></section>
+
       
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
+        </div>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://litten.me/2018/09/18/go-http/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
       
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2016" class="archive-year">2016</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2016/11/10/cgi/" class="archive-article-date">
-  	<time datetime="2016-11-10T01:59:27.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2016-11-10</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2016/11/10/cgi/">cgi，fastcgi，php-fpm的一些个人理解</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">技术</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/php//" class="article-tag-list-link color4">php</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2016/09/04/sth-to-say/" class="archive-article-date">
-  	<time datetime="2016-09-04T09:34:33.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2016-09-04</time>
-</a>
+<nav id="article-nav">
+  
+  
+    <a href="/2018/09/14/queue/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">消息队列--laravel小案例</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2016/09/04/sth-to-say/">过好一个人的生活</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">随笔</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/心情//" class="article-tag-list-link color3">心情</a>
-        		</li>
-      		
-		</ul>
-	</div>
+        
+        
+    </div>
+</aside>
 
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2016/04/21/my-first-blog/" class="archive-article-date">
-  	<time datetime="2016-04-21T06:44:15.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2016-04-21</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2016/04/21/my-first-blog/">高性能mysql</a>
-    </h1>
-  
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">技术</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/mysql//" class="article-tag-list-link color1">mysql</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
   
   
-    </div></section>
   
 
-    
+  
+
+  
+
+  
 
 
           </div>
@@ -453,8 +403,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
-		isArchive: true,
+		isPost: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,
