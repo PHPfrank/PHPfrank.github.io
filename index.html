@@ -364,7 +364,7 @@
     <div class="article-entry" itemprop="articleBody">
       
         <p>先来了解几个基本的概念：</p>
-<p>cgi全称是“公共网关接口”(Common Gateway Interface)，HTTP服务器与你的或其它机器上的程序进行“交谈”的一种工具，其程序须运行在网络服务器上。当web server（nginx）收到/index.php这个请求后，会启动对应的CGI程序，这里就是PHP的解析器。接下来PHP解析器会解析php.ini文件，初始化执行环境（消耗大量时间，对每个请求都要执行，fastcgi就是对这个过程的优化），然后处理请求，再以CGI规定的格式返回处理后的结果，退出进程。web server再把结果返回给浏览器。</p>
+<p>cgi全称是“公共网关接口”(Common Gateway Interface)，HTTP服务器与你的或其它机器上的程序进行“交谈”的一种工具，其程序须运行在网络服务器上。当web server（nginx）收到/index.php这个请求后，会启动对应的实现CGI的程序，这里就是PHP的解析器。<code>接下来PHP解析器会根据协议解析php.ini文件，初始化执行环境（对每个请求都要执行这个过程，会消耗大量时间，浪费大量资源，于是有了fastcgi对这个过程进行优化）</code>，然后处理请求，再以CGI规定的格式返回处理后的结果，退出进程。web server再把结果返回给浏览器。</p>
         
           <a class="article-more-a" href="/2016/11/10/cgi/#more">more >></a>
         

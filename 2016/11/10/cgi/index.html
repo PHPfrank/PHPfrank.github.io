@@ -17,7 +17,7 @@
 <meta property="og:description" content="技术">
 <meta property="og:locale" content="default">
 <meta property="og:image" content="https://wl2x7ve3z6yq9r6s.oss-cn-hangzhou.aliyuncs.com/2018-09-05/ab59f08f885085109286e8ca846c70af.png">
-<meta property="og:updated_time" content="2018-09-05T02:19:59.423Z">
+<meta property="og:updated_time" content="2018-09-19T08:26:46.744Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="cgi，fastcgi，php-fpm的一些个人理解">
 <meta name="twitter:description" content="技术">
@@ -184,10 +184,10 @@
     <div class="article-entry" itemprop="articleBody">
       
         <p>先来了解几个基本的概念：</p>
-<p>cgi全称是“公共网关接口”(Common Gateway Interface)，HTTP服务器与你的或其它机器上的程序进行“交谈”的一种工具，其程序须运行在网络服务器上。当web server（nginx）收到/index.php这个请求后，会启动对应的CGI程序，这里就是PHP的解析器。接下来PHP解析器会解析php.ini文件，初始化执行环境（消耗大量时间，对每个请求都要执行，fastcgi就是对这个过程的优化），然后处理请求，再以CGI规定的格式返回处理后的结果，退出进程。web server再把结果返回给浏览器。</p>
+<p>cgi全称是“公共网关接口”(Common Gateway Interface)，HTTP服务器与你的或其它机器上的程序进行“交谈”的一种工具，其程序须运行在网络服务器上。当web server（nginx）收到/index.php这个请求后，会启动对应的实现CGI的程序，这里就是PHP的解析器。<code>接下来PHP解析器会根据协议解析php.ini文件，初始化执行环境（对每个请求都要执行这个过程，会消耗大量时间，浪费大量资源，于是有了fastcgi对这个过程进行优化）</code>，然后处理请求，再以CGI规定的格式返回处理后的结果，退出进程。web server再把结果返回给浏览器。</p>
 <a id="more"></a>
-<p>Fastcgi是用来提高CGI程序性能的。WEB服务器与处理程序之间通信的一种协议，是CGI的改进方案。用来沟通程序(如PHP, Python, Java)和Web服务器(Apache2, Nginx), 理论上任何语言编写的程序都可以通过Fastcgi来提供Web服务。Fastcgi的特点是会启动一个master，解析php.ini文件，初始化环境。在一个进程中依次完成多个请求，以达到提高效率的目的，大多数Fastcgi实现都会维护一个进程池。</p>
-<p>PHP-fpm: 是一个实现了Fastcgi的程序，被PHP官方收录了（php5.3）。fastcgi是一个协议，php-fpm实现了这个协议</p>
+<p>Fastcgi是用来提高CGI程序性能的。WEB服务器与处理程序之间通信的<code>一种协议</code>，是CGI的改进方案。用来沟通程序(如PHP, Python, Java)和Web服务器(Apache2, Nginx), 理论上任何语言编写的程序都可以通过Fastcgi来提供Web服务。<code>Fastcgi的特点是会启动一个master(支持多个pool,每个pool由master进程监听不同的端口,pool中有多个worker进程.master进程本身并不处理请求,而是worker进程直接处理),</code>然后解析php.ini文件，初始化环境。在一个进程中依次完成多个请求，以达到提高效率的目的，大多数Fastcgi实现都会维护一个进程池。</p>
+<p>PHP-fpm: 是一个实现了Fastcgi的<code>程序</code>，被PHP官方收录了（php5.3）。fastcgi是一个协议，php-fpm实现了这个协议。<code>php-fpm是一个完全独立的程序,不依赖php-cgi(php自带的cgi管理模块),也不依赖php.</code>因为php-fpm是一个内置了php解释器的FastCGI服务,启动时能够自行读取php.ini配置和php-fpm.conf配置.</p>
 <p><img src="https://wl2x7ve3z6yq9r6s.oss-cn-hangzhou.aliyuncs.com/2018-09-05/ab59f08f885085109286e8ca846c70af.png" alt="blockchain"></p>
 <p>个人将cgi理解为翻译工具，举个例子，webserver如apache是中国人，收到的请求访问php文件是法国人，两者语言不通，无法沟通。这时cgi作为一个接口工具，为两者做翻译的服务。cgi程序会解析php的内容，以双方约定的形式返回web服务器。上图所展示的是我们平时常用的web架构LNMP，nginx充当Web Service,通过fast-cgi调用php解析器，通过php-fpm来维护这样一个进程池从而进行web项目的运行。</p>
 
