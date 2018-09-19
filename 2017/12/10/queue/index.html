@@ -6,19 +6,22 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="//litten.me">
-  <title>Category: php | frank的博客</title>
+  <title>消息队列--laravel小案例 | frank的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="93年生人，坐标杭州。">
-<meta name="keywords" content="深爱后端开发,golang,php,react">
-<meta property="og:type" content="website">
-<meta property="og:title" content="frank的博客">
-<meta property="og:url" content="//litten.me/categories/php/index.html">
+  <meta name="description" content="技术">
+<meta name="keywords" content="技术">
+<meta property="og:type" content="article">
+<meta property="og:title" content="消息队列--laravel小案例">
+<meta property="og:url" content="//litten.me/2017/12/10/queue/index.html">
 <meta property="og:site_name" content="frank的博客">
-<meta property="og:description" content="93年生人，坐标杭州。">
+<meta property="og:description" content="技术">
 <meta property="og:locale" content="default">
+<meta property="og:image" content="https://wl2x7ve3z6yq9r6s.oss-cn-hangzhou.aliyuncs.com/2018-09-14/91b20b8d2af30707cb2fcab6264a25f4.png">
+<meta property="og:updated_time" content="2018-09-19T09:38:46.691Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="frank的博客">
-<meta name="twitter:description" content="93年生人，坐标杭州。">
+<meta name="twitter:title" content="消息队列--laravel小案例">
+<meta name="twitter:description" content="技术">
+<meta name="twitter:image" content="https://wl2x7ve3z6yq9r6s.oss-cn-hangzhou.aliyuncs.com/2018-09-14/91b20b8d2af30707cb2fcab6264a25f4.png">
   
     <link rel="alternative" href="/atom.xml" title="frank的博客" type="application/atom+xml">
   
@@ -156,36 +159,151 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
+            <article id="post-queue" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
   
+    <h1 class="article-title" itemprop="name">
+      消息队列--laravel小案例
+    </h1>
   
-    
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2017" class="archive-year">2017</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2017/12/10/queue/" class="archive-article-date">
+
+        
+        <a href="/2017/12/10/queue/" class="archive-article-date">
   	<time datetime="2017-12-10T03:38:09.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-12-10</time>
 </a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2017/12/10/queue/">消息队列--laravel小案例</a>
-    </h1>
-  
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <ul>
+<li><h3 id="首先解释一下我们为什么会使用消息队列："><a href="#首先解释一下我们为什么会使用消息队列：" class="headerlink" title="首先解释一下我们为什么会使用消息队列："></a>首先解释一下我们为什么会使用消息队列：</h3></li>
+</ul>
+<p>主要原因是由于在高并发环境下，由于来不及同步处理，请求往往会发生堵塞，比如说，大量的insert，update之类的请求同时到达MySQL，直接导致无数的行锁表锁，甚至最后请求会堆积过多，从而触发too many connections错误。通过使用消息队列，我们可以异步处理请求，从而缓解系统的压力。</p>
+<p>目前业内使用较多的消息队列有RabbitMQ，ActiveMQ，ZeroMQ，Kafka，MetaMQ，RocketMQ</p>
+<p>总结一下消息队列的几个核心点：<br><code>1：队列实现的目的（为了异步执行，保证可以重试）</code><br><code>2：适合使用队列的任务：（耗时久的任务，需要保证成功率的任务）</code></p>
+<a id="more"></a>
+<ul>
+<li><h3 id="laravel消息队列实例："><a href="#laravel消息队列实例：" class="headerlink" title="laravel消息队列实例："></a>laravel消息队列实例：</h3></li>
+</ul>
+<p>作为一个laravel框架使用者，先以laravel5.5为基础来写个小demo看一下laravel是如何来利用队列处理业务逻辑的。</p>
+<p>laravel有自身搭建的队列系统laravel_queue，队列配置文件存放在 config/queue.php</p>
+<p>首先开启一个任务类：<br>shell输入：<br>php artisan make:job OrderMessage //订单消息队列</p>
+<p>接下来打开app目录下jobs文件夹，里面就会生成一个根据artisan指令创建的OrderMessage.php文件，下面先贴代码：</p>
+<pre><code>&lt;?php
 
-        <div class="article-info info-on-right">
-          
+namespace App\Jobs;
+
+use App\Models\OrderMessage;
+use Illuminate\Bus\Queueable;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+
+class OrderMessage implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    //队列处理参数
+    protected $order_id //订单ID
+
+    protected $user_id //用户ID
+
+    protected $msg //订单消息
+
+    /**
+    * Create a new job instance.
+    *
+    * @return void
+    */
+    public function __construct(array $data)
+    {
+        //参数赋值
+        $this-&gt;order_id = $data[&apos;order_id&apos;];
+
+        $this-&gt;user_id = $data[&apos;user_id&apos;];
+
+        $this-&gt;msg = $data[&apos;msg&apos;];
+    }
+
+    /**
+    * Execute the job.
+    * 队列逻辑实现方法
+    * @return void
+    */
+    public function handle()
+    {
+        //实现逻辑
+        $arr = array(
+            &apos;order_id&apos; =&gt; $this-&gt;order_id,
+            &apos;user_id&apos; =&gt; $this-&gt;user_id,
+            &apos;msg&apos; =&gt; $this-&gt;msg,
+        );
+        OrderMessage::insert($arr);
+    }
+}
+</code></pre><p>在这个job中，核心就是一个让队列用来调用此任务的 handle 方法，在这个方法中，我们来出来分发到队列中的任务。在这个小demo中，实现的逻辑就是向请求日志（request_log表中批量插入数据）。</p>
+<p>handle方法写好后，我们就能通过 dispatch 辅助函数来分发它了。想要传输的数据也可以在实例化的时候进行传递。直接贴一段测试分发的方法：</p>
+<pre><code>public function test(Request $request)
+{
+    //dispatch分发任务到消息队列
+    for($i = 0; $i &lt; 3; $i ++) 
+    {
+        //队列数据传递
+        $data = array(
+            &apos;order_id&apos; =&gt; $i,
+            &apos;user_id&apos; =&gt; $i,
+            &apos;msg&apos; =&gt; &apos;您的订单已经交易完成&apos;,
+        );
+    dispatch(new OrderMessage($data))-&gt;delay(now-&gt;addSecond(10));
+    }
+    exit(&apos;测试队列程序结束&apos;);
+}
+</code></pre><p>demo钟delay方法代表的即是将任务放入队列之后，延迟10秒钟之后进行处理。具体的时间可以修改。</p>
+<p>前期的准备工作完毕之后，可以正式的进行队列处理了。</p>
+<p>先看一下标准的队列运行指令：php artisan queue:work –quiet –delay=3 –sleep=3 –tries=3</p>
+<p>指令中参数的含义<br>–quiet（不输出任何内容）–delay=3（一个任务失败后，多久后再重试）<br>–sleep （去 Redis 中拿任务的时候，发现没有任务，休息多长时间，单位是秒）<br>–tries    （定义失败任务最多重试次数。这个值的设定根据任务的重要程度来确定，一般 3 次比较适合。）</p>
+<p>开发环境中可以使用queue:listen来监听，转移到正式环境之后还是使用queue:work来控制。</p>
+<p>来看一下实际效果，shell执行php artisan queue:work，开启队列任务</p>
+<p>路由访问刚才demo中的test方法，将任务分发到jobs中，然后handle方法会对分配进来的任务依次进行处理。</p>
+<p><img src="https://wl2x7ve3z6yq9r6s.oss-cn-hangzhou.aliyuncs.com/2018-09-14/91b20b8d2af30707cb2fcab6264a25f4.png" alt="blockchain"></p>
+<ul>
+<li><h3 id="laravel队列中请注意以下两点："><a href="#laravel队列中请注意以下两点：" class="headerlink" title="laravel队列中请注意以下两点："></a>laravel队列中请注意以下两点：</h3></li>
+</ul>
+<p>1.调用延迟执行时需要配置.env中 QUEUE_DRIVER 不可以是sync，即不可以同步执行（修改后记得php artisan config:clear清配置缓存）<br>2.重启队列的指令为： php artisan queue:restart</p>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>转发注明出处即可<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
@@ -197,7 +315,7 @@
 		</ul>
 	</div>
 
-          
+      
 	<div class="article-category tagcloud">
 		<i class="icon-book icon"></i>
 		<ul class="article-tag-list">
@@ -210,76 +328,113 @@
 	</div>
 
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://litten.me/2017/12/10/queue/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
   
-    
-    
-      
-        </div></section>
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2016" class="archive-year">2016</a>
+<nav id="article-nav">
+  
+    <a href="/2018/09/18/go-http/" id="article-nav-newer" class="article-nav-link-wrap">
+      <i class="icon-circle-left"></i>
+      <div class="article-nav-title">
+        
+          go中http包的运行流程梳理
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2016/11/10/cgi/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">cgi，fastcgi，php-fpm的一些个人理解</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2016/11/10/cgi/" class="archive-article-date">
-  	<time datetime="2016-11-10T01:59:27.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2016-11-10</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2016/11/10/cgi/">cgi，fastcgi，php-fpm的一些个人理解</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">技术</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/php//" class="article-tag-list-link color4">php</a>
-        		</li>
-      		
-		</ul>
-	</div>
+        
+        
+    </div>
+</aside>
 
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
+
   
   
-    </div></section>
   
 
-    
+  
+
+  
+
+  
 
 
           </div>
@@ -302,10 +457,10 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
+		isPost: true,
 		isArchive: false,
 		isTag: false,
-		isCategory: true,
+		isCategory: false,
 		open_in_new: false,
 		toc_hide_index: true,
 		root: "/",
